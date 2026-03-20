@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Our Game</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -22,80 +27,124 @@
             background-color: var(--bg-color);
             text-align: center;
             padding: 20px;
+            overflow: hidden; /* Prevents bouncing on mobile */
         }
         #card {
             background: white;
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 80%;
+            width: 85%;
             max-width: 400px;
             min-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.4rem;
+            font-weight: 500;
             margin-bottom: 30px;
+            line-height: 1.4;
         }
         button {
-            padding: 15px 40px;
+            padding: 18px 50px;
             font-size: 1.2rem;
             border: none;
             border-radius: 50px;
-            background: #333;
+            background: #2c3e50;
             color: white;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s active;
         }
+        button:active { transform: scale(0.95); }
         #turn-indicator {
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 2px;
             font-weight: bold;
+            color: #333;
         }
+        #progress { font-size: 0.8rem; margin-top: 15px; opacity: 0.6; }
     </style>
 </head>
 <body>
 
     <div id="turn-indicator">Tap to Start</div>
-    <div id="card">Ready?</div>
+    <div id="card">Ready to play?</div>
     <button onclick="nextTurn()">Next Turn</button>
+    <div id="progress"></div>
 
     <script>
+        // 1. Data Structure
         const records = [
             "Tell a secret you've never told me.",
             "What is your favorite memory of us?",
             "Give your partner a 30-second massage.",
             "What is one thing you appreciate about me today?",
-            // ... Add your 50 records here
+            "If we could travel anywhere tomorrow, where would we go?",
+            "What was your first impression of me?",
+            // Add your other 44 records here
         ];
 
-        let isWifeTurn = Math.random() < 0.5; // Randomize who starts
+        // 2. State Management (Persists in LocalStorage)
+        let state = JSON.parse(localStorage.getItem('gameState')) || {
+            isWifeTurn: Math.random() < 0.5,
+            usedIndices: []
+        };
+
         const card = document.getElementById('card');
         const indicator = document.getElementById('turn-indicator');
+        const progress = document.getElementById('progress');
         const body = document.body;
 
+        function saveState() {
+            localStorage.setItem('gameState', JSON.stringify(state));
+        }
+
         function nextTurn() {
-            // Pick a random record
-            const randomIndex = Math.floor(Math.random() * records.length);
+            // Reset if all cards are used
+            if (state.usedIndices.length === records.length) {
+                state.usedIndices = [];
+                alert("All cards used! Starting over.");
+            }
+
+            // Get a random index that hasn't been used
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * records.length);
+            } while (state.usedIndices.includes(randomIndex));
+
+            state.usedIndices.push(randomIndex);
             card.innerText = records[randomIndex];
 
             // Toggle Turn
-            isWifeTurn = !isWifeTurn;
+            state.isWifeTurn = !state.isWifeTurn;
 
             // Update UI
-            if (isWifeTurn) {
+            updateUI();
+            saveState();
+            
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
+        }
+
+        function updateUI() {
+            if (state.isWifeTurn) {
                 indicator.innerText = "Wife's Turn";
                 body.style.backgroundColor = "var(--wife-color)";
             } else {
                 indicator.innerText = "Husband's Turn";
                 body.style.backgroundColor = "var(--husband-color)";
             }
-            
-            // Subtle haptic feedback (works on many mobile devices)
-            if (window.navigator.vibrate) window.navigator.vibrate(50);
+            progress.innerText = `Card ${state.usedIndices.length} of ${records.length}`;
         }
+
+        // 3. Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        // Load initial state UI
+        if(state.usedIndices.length > 0) updateUI();
     </script>
 </body>
 </html>
