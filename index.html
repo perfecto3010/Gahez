@@ -106,55 +106,79 @@
         <p style="text-align:center; font-size:0.7rem; opacity:0.5;">يتم التحديث عبر GitHub</p>
     </div>
 
+<script src="gamesData.js"></script>
+
     <script>
-        // --- نظام الـ PIN ---
         let currentPin = "";
+        const correctPin = "3042023";
+
+        // وظيفة التأكد من الـ PIN والدخول
         function press(n) {
             if(currentPin.length < 7) {
                 currentPin += n;
                 updateDots();
                 if(currentPin.length === 7) {
-                    if(currentPin === "3042023") {
+                    if(currentPin === correctPin) {
                         document.getElementById('auth-overlay').style.display = 'none';
+                        document.getElementById('lobby').classList.add('active'); // إظهار اللوبي
                         sessionStorage.setItem('h_auth', '1');
                     } else {
-                        alert("الرمز خطأ"); currentPin = ""; updateDots();
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                        alert("الرمز خطأ"); 
+                        currentPin = ""; 
+                        updateDots();
                     }
                 }
             }
         }
+
         function del() { currentPin = currentPin.slice(0,-1); updateDots(); }
+        
         function updateDots() {
             const dots = document.querySelectorAll('.dot');
             dots.forEach((d, i) => d.classList.toggle('active', i < currentPin.length));
         }
 
-        // --- التنقل والوظائف ---
         let currentMode = "";
         function go(screenId) {
+            // إخفاء كل الشاشات
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            
             if(screenId === 'geaan' || screenId === 'arouh') {
                 currentMode = screenId;
                 document.getElementById('random-screen').classList.add('active');
                 document.getElementById('result-box').innerText = "؟";
                 document.getElementById('spin-btn').style.background = screenId === 'geaan' ? 'var(--accent-orange)' : 'var(--accent-blue)';
             } else {
-                document.getElementById(screenId + '-screen' || screenId).classList.add('active');
-                if(screenId === 'tasks') loadTasks();
+                // التعامل مع شاشة المهام أو اللوبي
+                const target = document.getElementById(screenId + '-screen') || document.getElementById(screenId);
+                if(target) {
+                    target.classList.add('active');
+                    if(screenId === 'tasks') loadTasks();
+                }
             }
         }
 
         function spin() {
+            if (!data[currentMode]) return;
             const options = data[currentMode];
             const res = document.getElementById('result-box');
+            res.style.opacity = "0.5";
             res.innerText = "جاري الاختيار...";
+            
             setTimeout(() => {
-                res.innerText = options[Math.floor(Math.random() * options.length)];
+                res.style.opacity = "1";
+                const randomChoice = options[Math.floor(Math.random() * options.length)];
+                res.innerText = randomChoice;
+                if (navigator.vibrate) navigator.vibrate(50);
             }, 600);
         }
 
         function loadTasks() {
-            document.getElementById('task-list').innerHTML = data.tasks.map(t => `
+            const taskList = document.getElementById('task-list');
+            if(!data.tasks) return;
+            
+            taskList.innerHTML = data.tasks.map(t => `
                 <div class="task-item ${t.d ? 'done' : ''}">
                     <span>${t.t}</span>
                     <span>${t.d ? '✅' : '⏳'}</span>
@@ -162,7 +186,13 @@
             `).join('');
         }
 
-        window.onload = () => { if(sessionStorage.getItem('h_auth')) document.getElementById('auth-overlay').style.display='none'; }
+        // عند التحميل: لو مسجل دخول افتح اللوبي فوراً
+        window.onload = () => { 
+            if(sessionStorage.getItem('h_auth') === '1') {
+                document.getElementById('auth-overlay').style.display='none';
+                document.getElementById('lobby').classList.add('active');
+            }
+        };
     </script>
 </body>
 </html>
