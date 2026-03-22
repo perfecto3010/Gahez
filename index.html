@@ -2,256 +2,167 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لعبة لهاليبو 🔥</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Heeran | حيران 🤔</title>
     <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    
+    <meta name="theme-color" content="#00d2ff">
     <style>
-        :root {
-            --bg-dark: #121212;
-            --primary-red: #e63946;
-            --flame-orange: #fca311;
-            --wife-color: #ff4d6d;
-            --husband-color: #0077b6;
-            --text-light: #ffffff;
+        :root { 
+            --bg: #0f0f0f; 
+            --card-bg: #1e1e1e;
+            --accent-blue: #00d2ff;
+            --accent-green: #4caf50;
+            --accent-orange: #ff9800;
+            --main-purple: #6441a5;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            margin: 0; background: var(--bg); 
+            color: white; height: 100dvh; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
-        body {
-            font-family: 'Cairo', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            text-align: center;
-            padding: 20px;
-            overflow: hidden;
-            touch-action: manipulation;
+        /* --- شاشة الـ PIN (نفس سوا بالظبط) --- */
+        #auth-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #0f0f0f; z-index: 9999; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .pin-dots { display: flex; justify-content: center; gap: 15px; margin: 25px 0; direction: ltr; }
+        .dot { width: 18px; height: 18px; border: 2px solid var(--main-purple); border-radius: 50%; }
+        .dot.active { background-color: var(--main-purple); transform: scale(1.2); }
+        .pin-keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 280px; direction: ltr; }
+        .pin-keyboard button { 
+            width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(255,255,255,0.05); color: white; font-size: 1.5rem; 
         }
 
-        #overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            box-sizing: border-box;
+        /* --- شاشات التطبيق --- */
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 20px; box-sizing: border-box; }
+        .screen.active { display: flex; }
+        
+        .hub-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin: auto; width: 100%; max-width: 350px; }
+        .hub-card { 
+            background: var(--card-bg); padding: 30px; border-radius: 25px; 
+            text-align: center; font-size: 1.4rem; font-weight: bold; cursor: pointer;
+            border-right: 8px solid var(--accent-blue); transition: 0.3s;
         }
 
-        .modal {
-            background: #222;
-            padding: 25px;
-            border-radius: 25px;
-            border: 2px solid var(--flame-orange);
-            max-width: 400px;
+        .display-area { 
+            flex-grow: 1; background: #1a1a1a; border-radius: 30px; 
+            margin: 20px 0; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.8rem; text-align: center; padding: 20px; border: 2px dashed #333;
         }
 
-        #card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.1);
-            padding: 40px 25px;
-            border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            width: 85%;
-            max-width: 400px;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 30px;
-            line-height: 1.6;
-            color: #fff;
+        .action-btn { 
+            background: var(--accent-blue); color: black; padding: 20px; 
+            border-radius: 20px; border: none; font-size: 1.2rem; font-weight: bold; 
         }
 
-        button {
-            padding: 15px 60px;
-            font-size: 1.4rem;
-            font-weight: 900;
-            border: none;
-            border-radius: 50px;
-            background: linear-gradient(45deg, var(--primary-red), var(--flame-orange));
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
-            transition: all 0.2s ease;
+        /* --- قائمة المهام --- */
+        .task-item { 
+            background: #252525; padding: 15px; border-radius: 15px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box;
         }
-
-        button:active { transform: scale(0.92); filter: brightness(1.2); }
-
-        #turn-indicator {
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-            font-weight: 900;
-            padding: 5px 20px;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.3);
-        }
-
-        #progress { font-size: 0.9rem; margin-top: 20px; opacity: 0.5; font-weight: bold; }
-        .fire-icon { font-size: 2rem; margin-bottom: 10px; }
+        .done { opacity: 0.4; text-decoration: line-through; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <div class="modal">
-            <div class="fire-icon">🔥</div>
-            <h2>طريقة اللعب</h2>
-            <p>لعبة لهاليبو مخصصة للمتزوجين فقط. ستظهر تحديات أو أسئلة بالتبادل بين الزوج والزوجة.</p>
-            <ul style="text-align: right; margin-bottom: 25px;">
-                <li>تغير لون الشاشة يحدد من عليه الدور.</li>
-                <li>الصراحة والجرأة هما أساس اللعبة!</li>
-            </ul>
-            <button onclick="closeInstructions()">يلا نبدأ!</button>
+    <div id="auth-overlay">
+        <h2>Heeran | حيران 🤔</h2>
+        <div class="pin-dots" id="dots-container">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="pin-keyboard">
+            <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
+            <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
+            <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
+            <button style="visibility:hidden"></button><button onclick="press(0)">0</button>
+            <button onclick="del()" style="color:#ff4444">⌫</button>
         </div>
     </div>
 
-    <div class="fire-icon">🔥🔥🔥</div>
-    <div id="turn-indicator">جاهزين؟</div>
-    <div id="card">اضغط على الزر لبدء التحدي الأول</div>
-    <button onclick="nextTurn()">الدور التالي</button>
-    <div id="progress"></div>
+    <div id="lobby" class="screen active">
+        <h1 style="text-align:center; margin-top:30px;">حيران في إيه؟</h1>
+        <div class="hub-grid">
+            <div class="hub-card" style="border-color:var(--accent-orange)" onclick="go('geaan')">🍕 جعان</div>
+            <div class="hub-card" style="border-color:var(--accent-blue)" onclick="go('arouh')">📍 أروح فين</div>
+            <div class="hub-card" style="border-color:var(--accent-green)" onclick="go('tasks')">✅ مهامي</div>
+        </div>
+    </div>
+
+    <div id="random-screen" class="screen">
+        <button onclick="go('lobby')" style="background:none; border:none; color:white; text-align:right; font-size:1.2rem;">✕ رجوع</button>
+        <div id="result-box" class="display-area">؟</div>
+        <button id="spin-btn" class="action-btn" onclick="spin()">اختارلي 🎲</button>
+    </div>
+
+    <div id="tasks-screen" class="screen">
+        <button onclick="go('lobby')" style="background:none; border:none; color:white; text-align:right; font-size:1.2rem; margin-bottom:10px;">✕ رجوع</button>
+        <div id="task-list" style="overflow-y:auto; flex-grow:1;"></div>
+        <p style="text-align:center; font-size:0.7rem; opacity:0.5;">يتم التحديث عبر GitHub</p>
+    </div>
 
     <script>
-        const records = [
-            "قولي أكتر حاجة بتشدك فيا لما بنكون لوحدنا؟",
-            "غمضي عينيكي واستني مني بوسة في مكان غير متوقع.",
-            "احكي لي موقف محرج حصل لك وأنا مش معاك.",
-            "لو طلبت منك نرقص سلو دلوقتي على أغنية بنحبها، هتختار أغنية إيه؟",
-            "إيه أكتر لبس ليا بيعجبك وبتحس إنه بيليق عليا أوي؟",
-            "همس في ودني بكلمة حب بتخلي قلبي يدق.",
-            "لو هنقضي ليلة رومانسية في فندق، تحب يكون الجو عامل ازاي؟",
-            "إيه أكتر حاجة مجنونة نفسك نعملها مع بعض؟",
-            "بوسة رقيقة على رقبتي لمدة 10 ثواني.",
-            "اوصف شعورك أول مرة مسكت فيها إيدي.",
-            "إيه أكتر صفة فيا بتخليك فخور إنك متجوزني؟",
-            "لو معاك عصا سحرية، إيه الحاجة اللي تحب تغيرها في يومنا الروتين؟",
-            "نظرة عين لعين لمدة دقيقة من غير كلام.. مين هيضحك الأول؟",
-            "قولي 'بحبك' بـ 3 لغات مختلفة وبطريقة رومانسية.",
-            "إيه أكتر أكله عملتها وعجبتك أوي ونفسك أكررها؟",
-            "لو طلبت منك توصفني بكلمة واحدة 'جريئة'.. هتكون إيه؟",
-            "مساج سريع لكتفي ورقبتي عشان أفصل من التعب.",
-            "إيه هي أكتر ذكرى 'شقية' بينا مش قادر تنساها؟",
-            "لو هنمثل فيلم رومانسي، تختار نكون زي مين؟",
-            "قولي سر صغير عنك محدش يعرفه غيري.",
-            "إيه أكتر حاجة بتخليك تغير عليا؟",
-            "غمض عينك وحاول تحزر أنا بلمس وشك فين بالظبط.",
-            "لو هنلغي الموبايلات النهاردة، تحب نقضي الوقت في إيه؟",
-            "إيه هو 'الستايل' اللي تحب تشوفني بيه أكتر في البيت؟",
-            "احكي لي عن حلم حلمته بيا وكان جميل.",
-            "بوسة على إيدي وقولي كلمة شكر على وجودي في حياتك.",
-            "لو هنسافر 'شهر عسل' جديد، تختار أي بلد؟",
-            "إيه أكتر حاجة عملتها وفاجئتك بجد؟",
-            "دلعني باسم جديد مكنتش بتقولهولي قبل كده.",
-            "إيه هي الأغنية اللي لما بتسمعها بتفتكرني فوراً؟",
-            "لو ليك طلب واحد 'أمر مطاع' دلوقتي، هيكون إيه؟",
-            "إيه أكتر حركة بعملها بتخليك تضحك من قلبك؟",
-            "احكي لي عن أول مرة حسيت فيها إنك بجد بتحبني.",
-            "حضن دافي لمدة 30 ثانية من غير أي حركة.",
-            "لو بقيت 'مارد' وبنفذ طلباتك، تطلب مني إيه النهاردة؟",
-            "إيه هو المكان اللي نفسك نروح نقعد فيه لوحدنا تماماً؟",
-            "قولي رأيك بصراحة.. إيه أكتر حاجة بتميزني عن أي حد تاني؟",
-            "لو رجعنا لأول يوم تقابلنا فيه، كنت هتقولي إيه زيادة؟",
-            "بوسة 'هادية' على الجبين تعبر عن التقدير.",
-            "إيه أكتر حاجة بتخليني في نظرك 'لهلوبة'؟",
-            "لو هنعمل 'بيجامة بارتي' النهاردة، تحب نتفرج على فيلم إيه؟",
-            "إيه الحاجة اللي دايماً بتوحشك فيا وأنا بعيد عنك؟",
-            "اوصف لي شكلك وأنت بتفكر فيا دلوقتي.",
-            "لو طلبت منك ترسم لي قلب على كف إيدي، هترسمه ازاي؟",
-            "إيه أكتر حاجة بتخليك تحس إنك 'ملك' معايا؟",
-            "غمضي عينك وحاولي تعرفي أنا شايل إيه في إيدي (لو مفيش، تخيل حاجة).",
-            "قولي إيه أكتر حاجة بتهدي أعصابك لما تكون زعلان مني؟",
-            "لو حياتنا كتاب، تحب تختار له عنوان إيه؟",
-            "إيه هي أجرأ فكرة جت في بالك ونفسك ننفذها سوا؟",
-            "العب في شعري برقة لمدة دقيقتين."
-        ];
-
-        function shuffle(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        // --- نظام الـ PIN ---
+        let currentPin = "";
+        function press(n) {
+            if(currentPin.length < 7) {
+                currentPin += n;
+                updateDots();
+                if(currentPin.length === 7) {
+                    if(currentPin === "3042023") {
+                        document.getElementById('auth-overlay').style.display = 'none';
+                        sessionStorage.setItem('h_auth', '1');
+                    } else {
+                        alert("الرمز خطأ"); currentPin = ""; updateDots();
+                    }
+                }
             }
-            return array;
+        }
+        function del() { currentPin = currentPin.slice(0,-1); updateDots(); }
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((d, i) => d.classList.toggle('active', i < currentPin.length));
         }
 
-        let state = JSON.parse(localStorage.getItem('gameState')) || {
-            isWifeTurn: Math.random() < 0.5,
-            usedIndices: [],
-            shuffledOrder: shuffle([...Array(records.length).keys()])
-        };
-
-        const card = document.getElementById('card');
-        const indicator = document.getElementById('turn-indicator');
-        const progress = document.getElementById('progress');
-        const body = document.body;
-        const overlay = document.getElementById('overlay');
-
-        if (localStorage.getItem('hasSeenInstructions')) {
-            overlay.style.display = 'none';
-        }
-
-        function closeInstructions() {
-            overlay.style.display = 'none';
-            localStorage.setItem('hasSeenInstructions', 'true');
-        }
-
-        function saveState() {
-            localStorage.setItem('gameState', JSON.stringify(state));
-        }
-
-        function nextTurn() {
-            if (state.usedIndices.length === records.length) {
-                state.usedIndices = [];
-                state.shuffledOrder = shuffle([...Array(records.length).keys()]);
-                alert("خلصنا الـ 50 كارت! هنبدأ عشوائي من جديد 🔥");
-            }
-
-            const actualRecordIndex = state.shuffledOrder[state.usedIndices.length];
-            state.usedIndices.push(actualRecordIndex);
-            
-            card.innerText = records[actualRecordIndex];
-            state.isWifeTurn = !state.isWifeTurn;
-
-            updateUI();
-            saveState();
-            
-            if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 50]);
-        }
-
-        function updateUI() {
-            if (state.isWifeTurn) {
-                indicator.innerText = "دور الزوجة 👸";
-                body.style.backgroundColor = "var(--wife-color)";
+        // --- التنقل والوظائف ---
+        let currentMode = "";
+        function go(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if(screenId === 'geaan' || screenId === 'arouh') {
+                currentMode = screenId;
+                document.getElementById('random-screen').classList.add('active');
+                document.getElementById('result-box').innerText = "؟";
+                document.getElementById('spin-btn').style.background = screenId === 'geaan' ? 'var(--accent-orange)' : 'var(--accent-blue)';
             } else {
-                indicator.innerText = "دور الزوج 🤴";
-                body.style.backgroundColor = "var(--husband-color)";
+                document.getElementById(screenId + '-screen' || screenId).classList.add('active');
+                if(screenId === 'tasks') loadTasks();
             }
-            progress.innerText = `تحدي ${state.usedIndices.length} من ${records.length}`;
         }
 
-        // تحديث الواجهة عند التحميل إذا كان هناك لعب مسبق
-        if(state.usedIndices.length > 0) {
-            const lastIndex = state.usedIndices[state.usedIndices.length - 1];
-            card.innerText = records[lastIndex];
-            updateUI();
+        function spin() {
+            const options = data[currentMode];
+            const res = document.getElementById('result-box');
+            res.innerText = "جاري الاختيار...";
+            setTimeout(() => {
+                res.innerText = options[Math.floor(Math.random() * options.length)];
+            }, 600);
         }
+
+        function loadTasks() {
+            document.getElementById('task-list').innerHTML = data.tasks.map(t => `
+                <div class="task-item ${t.d ? 'done' : ''}">
+                    <span>${t.t}</span>
+                    <span>${t.d ? '✅' : '⏳'}</span>
+                </div>
+            `).join('');
+        }
+
+        window.onload = () => { if(sessionStorage.getItem('h_auth')) document.getElementById('auth-overlay').style.display='none'; }
     </script>
 </body>
 </html>
